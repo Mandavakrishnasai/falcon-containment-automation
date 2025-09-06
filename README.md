@@ -1,53 +1,55 @@
 # falcon-containment-automation
 
-A small, hands-on project that shows how to **contain** a Windows 11 VM with CrowdStrike Falcon (block its network), **lift** containment (restore network), and export a **Top-10 vulnerabilities** CSV from Spotlight. It uses a simple Python script on Ubuntu to call the Falcon API and saves clear proof (screenshots + CSV) for your portfolio.
+A small, hands-on project that shows how to **contain** a Windows 11 VM with CrowdStrike Falcon (block its network), **lift** containment (restore network), and export a **Top-10 vulnerabilities** CSV from Spotlight. It uses simple Python scripts on Ubuntu to call the Falcon API and saves clear proof (screenshots + CSV) for your portfolio.
 
 ---
 
 ## What this project does
-
-* **Contain a host:** Put a Windows 11 VM into network containment from the Falcon API.
-* **Lift containment:** Restore normal network access.
-* **Prove the result:** Run a quick TCP test (port 443) in the VM to show blocked vs. allowed.
-* **Export fixes:** Pull a “Top-10 Spotlight” CSV so you can prioritize patches.
+- **Contain a host:** Put a Windows 11 VM into network containment from the Falcon API.
+- **Lift containment:** Restore normal network access.
+- **Prove the result:** Run a TCP test (port 443) in the VM to show blocked vs. allowed.
+- **Export fixes:** Pull a “Top-10 Spotlight” CSV to prioritize patches.
 
 ---
 
 ## What’s in the repo
 
 ```
-scripts/
-  autocontain_v2.py      # contain / lift
-  device_check.py        # show host details (platform, version, state)
-  spotlight_top10.py     # export Top-10 vulnerabilities to CSV
 
-reports/                 # generated CSV goes here (add your file)
-screenshots/             # add your screenshots here
+scripts/
+autocontain\_v2.py      # contain / lift (recommended)
+device\_check.py        # show host details (platform, version, state)
+spotlight\_top10.py     # export Top-10 vulnerabilities to CSV
+autocontain.py         # baseline version used in the lab
+
+reports/                 # put top10\_spotlight.csv here
+screenshots/             # proof images:
+\#   falconcontained.png
+\#   falconnormal.png
+\#   vmcontained.png
+\#   vmlifted.png
 README.md
 requirements.txt
-.gitignore               # keeps secrets and local files out of git
-```
+
+````
+
+> **Do not commit secrets.** Keep API keys in a local `.env` file that is not pushed to GitHub.
 
 ---
 
 ## Prerequisites
-
-* CrowdStrike Falcon tenant with **API client** (Client ID/Secret).
-* A Windows 11 VM with the Falcon sensor installed (e.g., host name `MANDAVA`).
-* An Ubuntu machine (can be a VM) with Python 3.10+ and internet access.
-
-> **Do not commit secrets.** Keep your API keys in a local `.env` file.
+- CrowdStrike Falcon tenant with **API client** (Client ID/Secret).
+- A Windows 11 VM with the Falcon sensor installed (e.g., host name `MANDAVA`).
+- An Ubuntu machine (can be a VM) with Python 3.10+ and internet access.
 
 ---
 
 ## Setup (Ubuntu)
-
-1. Create a Python environment and install packages:
-
+1) Create a Python environment and install packages:
 ```bash
 python3 -m venv ~/.venv_capstone
 ~/.venv_capstone/bin/pip install -r requirements.txt
-```
+````
 
 2. Create `~/.env` (local only, not in git):
 
@@ -63,15 +65,15 @@ EOF
 
 ## Run the demo
 
-> Replace `MANDAVA` with your Windows VM host name if different.
+> Replace `MANDAVA` if your Windows VM host name is different.
 
-**Contain the VM:**
+**Contain the VM**
 
 ```bash
 ~/.venv_capstone/bin/python scripts/autocontain_v2.py --host MANDAVA
 ```
 
-**Lift containment:**
+**Lift containment**
 
 ```bash
 ~/.venv_capstone/bin/python scripts/autocontain_v2.py --host MANDAVA --lift
@@ -79,25 +81,23 @@ EOF
 
 ---
 
-## Verify the result (quick, visual proof)
+## Verify the result (quick proof)
 
 Inside the **Windows 11 VM** (PowerShell):
 
-* **While contained** (should fail):
+* **While contained** (should fail)
 
 ```powershell
 Test-NetConnection 1.1.1.1 -Port 443
 ```
 
-* **After lift** (should succeed):
+* **After lift** (should succeed)
 
 ```powershell
 Test-NetConnection 1.1.1.1 -Port 443
 ```
 
-Also capture the Falcon device page showing status changing between **Contained** and **Normal**.
-
-> Save your images in `screenshots/` (e.g., `falcon-contained.png`, `falcon-normal.png`, `vm-contained-443.png`, `vm-lifted-443.png`).
+Also capture the Falcon device page showing **Contained** → **Normal**.
 
 ---
 
@@ -108,47 +108,44 @@ Also capture the Falcon device page showing status changing between **Contained*
 # Output: reports/top10_spotlight.csv
 ```
 
-Add the CSV to your repo to show prioritised fixes.
-
 ---
 
-## What to show in your portfolio
+## Evidence
 
-* Falcon device page: **Contained** → **Normal**
-* VM results: 443 **blocked** while contained, **allowed** after lift
-* `reports/top10_spotlight.csv`
+* Falcon device page — contained → normal
+  ![Contained](screenshots/falconcontained.png)
+  ![Normal](screenshots/falconnormal.png)
 
-This gives a simple, credible story: “I can contain a host, prove the impact, and pull a fix list.”
+* VM network while contained (TCP/443 blocked)
+  ![443 blocked](screenshots/vmcontained.png)
+
+* After lift (TCP/443 allowed)
+  ![443 open](screenshots/vmlifted.png)
+
+* Top-10 Spotlight fixes
+  `reports/top10_spotlight.csv`
 
 ---
 
 ## Troubleshooting (brief)
 
 * **Contain says “not eligible”:**
+  Start required services in the VM, then try again:
 
-  * Make sure Windows Firewall and Base Filtering Engine services are running in the VM:
-
-    ```powershell
-    sc start BFE; sc start MpsSvc
-    ```
-  * Restart the Falcon service:
-
-    ```powershell
-    Restart-Service CSFalconService -Force
-    ```
-  * Try contain again.
-
-* **CSV is empty:** Spotlight may need time to populate after the sensor comes online.
+  ```powershell
+  sc start BFE; sc start MpsSvc; Restart-Service CSFalconService -Force
+  ```
+* **CSV is empty:** Spotlight can take time to populate after the sensor comes online.
 
 ---
 
-## Safety and privacy
+## Safety
 
-* Do not commit `.env` or any keys.
-* This lab is designed for **test VMs** only, not production systems.
+* Don’t commit `.env` or any API keys.
+* Use this only with **test VMs**, not production systems.
 
 ---
 
-## License
-
-Use freely for learning and job portfolios. If you share or adapt, please credit the original repo name.
+```
+::contentReference[oaicite:0]{index=0}
+```
