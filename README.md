@@ -110,22 +110,7 @@ Also capture the Falcon device page showing **Contained** → **Normal**.
 
 ---
 
-## Evidence
 
-* Falcon device page — contained → normal
-  ![Contained](screenshots/falconcontained.png)
-  ![Normal](screenshots/falconnormal.png)
-
-* VM network while contained (TCP/443 blocked)
-  ![443 blocked](screenshots/vmcontained.png)
-
-* After lift (TCP/443 allowed)
-  ![443 open](screenshots/vmlifted.png)
-
-* Top-10 Spotlight fixes
-  `reports/top10_spotlight.csv`
-
----
 
 ## Troubleshooting (brief)
 
@@ -145,7 +130,3 @@ Also capture the Falcon device page showing **Contained** → **Normal**.
 * Use this only with **test VMs**, not production systems.
 
 ---
-
-```
-::contentReference[oaicite:0]{index=0}
-```
